@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hiv-art-resistance-engine"
+version = "2.0.0"
+description = "HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Engine"
+readme = "README.md"
+authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+hiv-art-resistance-engine = "hiv_art_resistance_agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/abusuraihsakhri/hiv-art-resistance-engine"
+Repository = "https://github.com/abusuraihsakhri/hiv-art-resistance-engine.git"
