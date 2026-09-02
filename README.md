@@ -1,58 +1,128 @@
-# HIV ART Resistance Interpreter
+# Hiv Art Resistance Agent
 
-Clinical tool for interpreting HIV genotypic resistance mutations and recommending antiretroviral therapy (ART) regimens based on a simplified Stanford HIVdb algorithm.
+> **Domain:** Infectious Disease Surveillance & Microbiology  
+> **Reference Guidelines & Standards:** `CLSI M100, EUCAST & CDC NHSN Clinical Standards`
 
-## Features
+<div align="center">
 
-- **Drug Class Coverage**: NRTIs, NNRTIs, PIs, INSTIs, Entry inhibitors
-- **Key Resistance Mutation Interpretation**:
-  - NRTI: M184V (3TC/FTC), K65R (TDF), TAMs (M41L, D67N, K70R, L210W, T215Y/F, K219Q/E)
-  - NNRTI: K103N (efavirenz), Y181C (nevirapine), E138K (rilpivirine)
-  - PI: I50V (atazanavir), I84V (darunavir), L90M (saquinavir)
-  - INSTI: N155H, Q148H/R/K, G140S (raltegravir), E92Q (dolutegravir)
-- **Stanford HIVdb-style Scoring**: Susceptible, Potential Low-Level, Low-Level, Intermediate, High-Level
-- **Regimen Selection**: Based on resistance profile with contraindication awareness
-- **Tropism Testing**: CCR5 vs CXCR4 interpretation with maraviroc eligibility
-- **Compensatory Mutation Handling**: G140S + Q148H synergy
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
+![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
+![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
 
-## Quick Start
+</div>
+
+---
+
+## 📖 What It Does
+
+**Hiv Art Resistance Agent** is an advanced analytical and computational platform implementing Stanford HIVdb Genotypic Resistance & ART Regimen Optimizer.
+
+---
+
+## ⚙️ Key Capabilities & Algorithmic Modules
+
+### 🔬 Analytical Functions
+
+- **`interpret_drug_resistance()`**: Interpret HIV resistance mutations and score each drug.
+
+Args:
+    mutations: List of mutation strings (e.g., ['M184V', 'K103N', 'N155H'])
+
+Returns:
+    Dict mapping each drug to its resistance score and level
+- **`recommend_regimen()`**: Recommend ART regimen based on resistance profile.
+
+Args:
+    resistance_interpretation: Output from interpret_drug_resistance()
+    tropism: 'CCR5', 'CXCR4', or 'dual_mixed' (optional)
+    hla_b5701_positive: Whether HLA-B*5701 is positive (abacavir hypersensitivity)
+    hepatitis_b_coinfected: Whether patient has HBV coinfection
+
+Returns:
+    Dict with recommended regimen and alternatives
+- **`interpret_tropism()`**: Interpret HIV tropism testing result.
+
+Args:
+    tropism_result: 'CCR5', 'CXCR4', 'DUAL_MIXED', or 'NON_R5'
+
+Returns:
+    Dict with interpretation and clinical implications
+- **`analyze_hiv_resistance()`**: Complete HIV ART resistance analysis.
+
+Args:
+    mutations: List of detected resistance mutations
+    tropism: Tropism test result (optional)
+    hla_b5701_positive: HLA-B*5701 status
+    hepatitis_b_coinfected: HBV coinfection status
+
+Returns:
+    Comprehensive analysis with resistance interpretation and regimen recommendations
+- **`build_parser()`**: Build the argument parser.
+
+---
+
+## 💻 CLI Quickstart & Usage
+
+### 1. Guided Interactive Mode
+```bash
+python cli.py
+```
+
+### 2. Direct Parameterized Evaluation
+```bash
+python cli.py --input data.csv
+```
+
+### Parameter Reference
+- `--interactive`: Launch guided terminal interactive wizard.
+- `--input <path>`: Evaluate input from JSON or CSV specification.
+- `--json`: Output deterministic structured results in JSON format.
+
+### Input Data Schema
+
+| Field | Description | Requirement |
+|:------|:------------|:------------|
+| `case_id` | Parameter / observation metric | Required |
+| `patient_synthetic_id` | Parameter / observation metric | Required |
+| `metric_primary` | Parameter / observation metric | Required |
+| `metric_secondary` | Parameter / observation metric | Required |
+| `is_stat` | Parameter / observation metric | Required |
+| `status_flag` | Parameter / observation metric | Required |
+
+---
+
+## 🛡️ Security & Enterprise Architecture
+
+* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
+* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
+* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
+* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
+* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
+
+---
+
+## 🧪 Testing & Verification
+
+Run the automated test suite:
 
 ```bash
-# Interpret resistance mutations
-python cli.py interpret --mutations M184V,K103N,N155H
-
-# With tropism testing
-python cli.py interpret --mutations M184V --tropism CCR5
-
-# Interpret tropism result
-python cli.py tropism --result CXCR4
+pytest -v
 ```
 
-## Python API
-
-```python
-from hiv_resistance_agent import analyze_hiv_resistance
-
-result = analyze_hiv_resistance(
-    mutations=["M184V", "K103N", "I84V"],
-    tropism="CCR5",
-    hla_b5701_positive=False,
-)
-print(result["regimen_recommendations"]["recommendations"][0]["description"])
-```
-
-## Testing
+Execute high-throughput batch simulation benchmarks:
 
 ```bash
-python -m pytest test_hiv_resistance_agent.py -v
+python simulator.py --tasks 1000 --concurrency 8
 ```
 
-## Standards
+---
 
-- Stanford HIVdb Algorithm (simplified)
-- DHHS Guidelines for the Use of Antiretroviral Agents (2024)
-- IAS-USA Drug Resistance Mutations (2023)
+## 🐳 Container Deployment
 
-## License
-
-MIT
+```bash
+docker build -t hiv-art-resistance-agent .
+docker run -p 8000:8000 hiv-art-resistance-agent
+```
