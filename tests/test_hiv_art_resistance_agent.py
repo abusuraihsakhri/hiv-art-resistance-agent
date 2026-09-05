@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-from agents.base import PHIGuard, AuditLogger, SecurityException
+from agents.base import PHIGuard, AuditLogger, SecurityException, AuditTrail
 from agents.models import SystemTaskPayload, UrgencyLevel, SystemIntegrityStatus
 from agents.workers import InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker
 from agents.supervisor import SystemSupervisor
@@ -63,3 +63,47 @@ def test_supervisor_consensus_and_audit():
     assert main(["audit", "--task-id", "CLI-TEST-01"]) == 0
     assert main(["chat", "Explain", "specifications"]) == 0
     assert main(["verify-audit"]) == 0
+
+
+def test_cli_audit_with_task_id_alias():
+    """Test that --task-id alias works for --case-id in audit subcommand."""
+    assert main(["audit", "--task-id", "ALIAS-TEST-01"]) == 0
+    assert main(["audit", "--case-id", "CASE-TEST-01"]) == 0
+
+
+def test_cli_verify_audit_integrity():
+    """Test that verify-audit subcommand verifies audit trail integrity."""
+    # First create some audit entries
+    AuditLogger.log("test", "test_tier", "TEST_EVENT", {"test": True})
+    # Then verify the audit trail
+    result = main(["verify-audit"])
+    assert result == 0
+
+
+def test_cli_chat_no_args():
+    """Test that chat subcommand works with no arguments (uses default)."""
+    assert main(["chat"]) == 0
+
+
+def test_audit_trail_tamper_detection():
+    """Test that AuditTrail detects tampering with the log chain."""
+    trail = AuditTrail(secret_key="test-key-for-tamper-detection")
+    trail.log("actor1", "tier1", "EVENT_1", {"data": "test1"})
+    trail.log("actor2", "tier2", "EVENT_2", {"data": "test2"})
+
+    # Verify integrity of valid chain
+    assert trail.verify_integrity() is True
+
+    # Tamper with the chain by modifying an entry
+    if trail.logs:
+        trail.logs[0]["payload_hash"] = "tampered_hash"
+
+    # Verify integrity detects tampering
+    assert trail.verify_integrity() is False
+
+
+def test_audit_trail_empty_integrity():
+    """Test that empty audit trail verifies as valid."""
+    trail = AuditTrail(secret_key="test-key-empty")
+    assert trail.verify_integrity() is True
+    assert trail.get_trail() == []

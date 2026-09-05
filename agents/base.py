@@ -8,6 +8,7 @@ import json
 import time
 import hmac
 import hashlib
+import warnings
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
@@ -57,7 +58,18 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "hiv-art-resistance-agent-master-audit-key-2026")).encode("utf-8")
+        resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY")
+        if not resolved_key:
+            import secrets
+            warnings.warn(
+                "AUDIT_SECRET_KEY environment variable not set. "
+                "Using a randomly generated key for this session. "
+                "Set AUDIT_SECRET_KEY for persistent audit integrity across restarts.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            resolved_key = secrets.token_hex(32)
+        self.secret_key = resolved_key.encode("utf-8")
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
@@ -83,10 +95,30 @@ class AuditTrail:
         return entry
 
     def verify_integrity(self) -> bool:
+        """Verify the cryptographic integrity of the entire audit chain.
+
+        Checks both:
+        1. Chain linkage: each entry's prev_hash matches the previous entry's current_hash
+        2. Cryptographic signatures: each entry's current_hash is a valid HMAC of its data
+        """
         for i, entry in enumerate(self.logs):
+            # Verify chain linkage
             prev = self.logs[i-1]["current_hash"] if i > 0 else "GENESIS_BLOCK_0000000000000000"
             if entry["prev_hash"] != prev:
                 return False
+
+            # Verify cryptographic signature by recomputing the HMAC
+            sign_string = (
+                f"{entry['audit_id']}|{entry['timestamp']}|{entry['actor']}|"
+                f"{entry['actor_tier']}|{entry['event_type']}|{entry['payload_hash']}|"
+                f"{entry['prev_hash']}"
+            )
+            expected_signature = hmac.new(
+                self.secret_key, sign_string.encode("utf-8"), hashlib.sha256
+            ).hexdigest()
+            if not hmac.compare_digest(entry["current_hash"], expected_signature):
+                return False
+
         return True
 
     def get_trail(self) -> List[Dict[str, Any]]:

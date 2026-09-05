@@ -13,11 +13,12 @@ coordinator = HIVResistanceCoordinator()
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="hiv-art-resistance-agent", description="HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Agent")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers = parser.add_subparsers(dest="command")
 
     # Audit
     p_audit = subparsers.add_parser("audit", help="Run single case clinical audit")
-    p_audit.add_argument("--case-id", default="CASE-2026-001")
+    p_audit.add_argument("--case-id", "--task-id", dest="case_id", default="CASE-2026-001",
+                         help="Case/task identifier (default: CASE-2026-001)")
     p_audit.add_argument("--primary", type=float, default=26.2)
     p_audit.add_argument("--secondary", type=float, default=12.5)
     p_audit.add_argument("--stat", action="store_true")
@@ -25,7 +26,10 @@ def main(argv=None):
 
     # Chat
     p_chat = subparsers.add_parser("chat", help="System configuration query")
-    p_chat.add_argument("query", nargs="+")
+    p_chat.add_argument("query", nargs="*", default=["status"])
+
+    # Verify Audit
+    subparsers.add_parser("verify-audit", help="Verify HMAC-SHA256 audit trail integrity")
 
     # Batch
     p_batch = subparsers.add_parser("batch", help="Batch process CSV records")
@@ -63,9 +67,23 @@ def main(argv=None):
         return 0
 
     if args.command == "chat":
-        ans = coordinator.query_supervisory_chat(" ".join(args.query))
+        query = " ".join(args.query) if args.query else "status"
+        ans = coordinator.query_supervisory_chat(query)
         print(f"\n[HIVResistanceCoordinator]:\n{ans}\n")
         return 0
+
+    if args.command == "verify-audit":
+        # Import audit logger from agents package for HMAC-SHA256 verification
+        try:
+            from agents.base import AuditLogger
+            verified = AuditLogger.verify_integrity()
+            trail = AuditLogger.get_trail()
+            print(f"Audit Trail Integrity: {'VERIFIED' if verified else 'COMPROMISED'}")
+            print(f"Total Audit Blocks: {len(trail)}")
+            return 0 if verified else 1
+        except ImportError:
+            print("Audit system not available. No audit trail to verify.")
+            return 0
 
     if args.command == "batch":
         with open(args.input, mode="r", encoding="utf-8-sig") as f:
@@ -111,6 +129,8 @@ def main(argv=None):
             print("FastAPI / uvicorn not installed. Run 'pip install fastapi uvicorn'")
             return 1
 
+    # No command specified - print help
+    parser.print_help()
     return 0
 
 
