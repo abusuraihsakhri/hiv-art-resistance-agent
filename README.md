@@ -1,231 +1,86 @@
-# Hiv Art Resistance Agent
+# HIV ART Resistance Agent
 
-> **Domain:** Infectious Disease Surveillance & Microbiology
-> **Reference Guidelines & Standards:** `CLSI M100, EUCAST & CDC NHSN Clinical Standards`
+An educational Python implementation of a **limited HIV-1 resistance mutation rule table**, with a command-line interpreter, a browser-based demonstration, and separate synthetic metric-audit utilities.
 
-<div align="center">
+> **Not for clinical use.** The local mutation and interaction tables are incomplete and have not been validated against a current Stanford HIVdb release. A drug with a zero penalty in this model **cannot** be presumed susceptible. Regimen combinations are illustrative rather than patient-specific recommendations. Use a validated resistance interpretation service and specialist review for clinical decisions.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Browser interface
 
-</div>
+The [browser interface source](web/index.html) runs the repository's Python interpreter in-browser using **Pyodide**. On a repository configured for GitHub Pages, the Pages workflow publishes the static interface together with a copy of the Python rules file. The published address must be verified before being documented here.
 
----
+Enter *synthetic, non-identifiable* mutation codes (for example, `M184V,K103N`), optionally set the tropism, HLA-B*5701 and HIV/HBV demonstration flags, and run the analysis. The UI displays recognized and unrecognized mutations, nonzero local drug scores, and illustrative candidate combinations. Results can be exported as JSON.
 
-## 📖 What It Does
+The browser downloads Pyodide from jsDelivr. Analysis values remain in the browser tab; the UI does not POST entered mutations to a server. The initial runtime download requires network access. The application is **not air-gapped**.
 
-**Hiv Art Resistance Agent** is an advanced analytical and computational platform implementing Stanford HIVdb Genotypic Resistance & ART Regimen Optimizer. It interprets HIV resistance mutations, scores drug susceptibility, recommends antiretroviral therapy (ART) regimens, and provides enterprise-grade security with PHI protection and cryptographic audit trails.
+## Python usage
 
----
-
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-### 🔬 Analytical Functions
-
-- **`interpret_drug_resistance()`**: Interpret HIV resistance mutations and score each drug.
-
-  Args:
-      mutations: List of mutation strings (e.g., ['M184V', 'K103N', 'N155H'])
-
-  Returns:
-      Dict mapping each drug to its resistance score and level
-
-- **`recommend_regimen()`**: Recommend ART regimen based on resistance profile.
-
-  Args:
-      resistance_interpretation: Output from interpret_drug_resistance()
-      tropism: 'CCR5', 'CXCR4', or 'dual_mixed' (optional)
-      hla_b5701_positive: Whether HLA-B*5701 is positive (abacavir hypersensitivity)
-      hepatitis_b_coinfected: Whether patient has HBV coinfection
-
-  Returns:
-      Dict with recommended regimen and alternatives
-
-- **`interpret_tropism()`**: Interpret HIV tropism testing result.
-
-  Args:
-      tropism_result: 'CCR5', 'CXCR4', 'DUAL_MIXED', or 'NON_R5'
-
-  Returns:
-      Dict with interpretation and clinical implications
-
-- **`analyze_hiv_resistance()`**: Complete HIV ART resistance analysis.
-
-  Args:
-      mutations: List of detected resistance mutations
-      tropism: Tropism test result (optional)
-      hla_b5701_positive: HLA-B*5701 status
-      hepatitis_b_coinfected: HBV coinfection status
-
-  Returns:
-      Comprehensive analysis with resistance interpretation and regimen recommendations
-
-### 🏢 Enterprise Agent System
-
-- **SystemSupervisor**: Multi-agent orchestrator coordinating QC, Safety, and Protocol Conformance workers
-- **PHIGuard**: Zero-PHI outbound interceptor blocking SSNs, MRNs, phone numbers, and patient identifiers
-- **AuditLogger**: Tamper-evident HMAC-SHA256 cryptographic audit trail with integrity verification
-- **LLMFactory**: Air-gapped LLM reasoning adapter supporting Ollama, Claude, OpenAI, and deterministic mocks
-
----
-
-## 💻 CLI Quickstart & Usage
-
-### Installation
+Requires Python 3.10–3.12 for the tested CI configuration (package metadata currently allows Python 3.9+). Install the local package:
 
 ```bash
-pip install fastapi uvicorn pydantic pytest
+python -m pip install .
 ```
 
-Set the audit secret key for persistent audit integrity:
-```bash
-# Linux/macOS
-export AUDIT_SECRET_KEY="your-secure-random-key"
+Run the standalone rule-table interpreter (standard library only when invoked directly):
 
-# Windows
-set AUDIT_SECRET_KEY=your-secure-random-key
-```
-
-### 1. Interpret Resistance Mutations
 ```bash
 python hiv_resistance_agent.py interpret --mutations M184V,K103N,N155H --tropism CCR5
+python hiv_resistance_agent.py tropism --result CXCR4
+python hiv_resistance_agent.py csv --input your_example.csv --output results.json
 ```
 
-### 2. Interpret Tropism
-```bash
-python hiv_resistance_agent.py tropism --result CCR5
-```
+The `interpret` command returns mutation details, local drug scores, unrecognized mutations, and demonstration regimen candidates. Input mutation tokens are normalized and deduplicated. Unsupported mutations trigger a specialist-review result instead of being silently ignored.
 
-### 3. Run Clinical Audit
-```bash
-python cli.py audit --case-id CASE-001 --primary 26.2 --secondary 12.5 --stat --status DISCORDANT
-```
+## Separate synthetic metric-audit tools
 
-### 4. Verify Audit Trail Integrity
+This is a **demonstration metric-audit subsystem**, **not** genotypic HIV resistance interpretation. It accepts generic numeric metrics and status flags. The threshold values are synthetic, not HIV treatment thresholds or medical guideline cutoffs.
+
 ```bash
+python cli.py audit --case-id DEMO-001 --primary 26.2 --secondary 12.5 --status DISCORDANT
+python cli.py batch --input sample.csv --output results.csv
+python cli.py chat status
 python cli.py verify-audit
 ```
 
-### 5. System Query Chat
-```bash
-python cli.py chat "system status"
-```
-
-### 6. Batch Process CSV
-```bash
-python cli.py batch -i sample.csv -o results.csv
-```
-
-### 7. Launch REST API Server
-```bash
-python cli.py serve --host 0.0.0.0 --port 8000
-```
-
-### Parameter Reference
-- `interpret`: Interpret HIV resistance mutations
-  - `--mutations`: Comma-separated list of mutations (e.g., M184V,K103N)
-  - `--tropism`: Tropism result (CCR5, CXCR4, DUAL_MIXED)
-  - `--hla-b5701`: HLA-B*5701 positive flag
-  - `--hbv`: Hepatitis B coinfection flag
-- `tropism`: Interpret tropism test result
-  - `--result`: Tropism result
-- `audit`: Run clinical audit
-  - `--case-id`/`--task-id`: Case identifier
-  - `--primary`: Primary metric value
-  - `--secondary`: Secondary metric value
-  - `--stat`: STAT priority flag
-  - `--status`: Status descriptor
-- `verify-audit`: Verify HMAC-SHA256 audit trail integrity
-- `chat`: System configuration query
-- `batch`: Batch process CSV records
-  - `-i/--input`: Input CSV file
-  - `-o/--output`: Output CSV file
-- `serve`: Launch FastAPI REST server
-  - `--host`: Server host (default: 127.0.0.1)
-  - `--port`: Server port (default: 8000)
-
----
-
-## 🛡️ Security & Enterprise Architecture
-
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition. Integrity verification detects both chain linkage breaks and signature tampering.
-* **Secure Key Management:** Audit signing key sourced from `AUDIT_SECRET_KEY` environment variable. Runtime warning issued if not set; a cryptographically random key is generated per session.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
-
----
-
-## 🧪 Testing & Verification
-
-Run the automated test suite:
+To run the optional FastAPI implementation:
 
 ```bash
-pytest -v
+python -m pip install ".[api]"
+python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
-The test suite includes:
-- HIV drug class and mutation database validation
-- Resistance scoring accuracy (M184V, K65R, K103N, N155H, etc.)
-- Regimen recommendation logic (INSTI-based, PI-based, NNRTI-based)
-- Tropism interpretation (CCR5, CXCR4, dual/mixed)
-- Full multi-class resistance analysis
-- CLI command validation (interpret, tropism, audit, chat, verify-audit)
-- PHI guard enforcement
-- Worker agent evaluation (QC, Safety, Protocol Conformance)
-- Supervisor consensus and audit integrity
-- Audit trail tamper detection
-- Enrichment suite execution
+The metric API supports `/health` and `/api/audit` with synthetic numeric payloads. The `agents.api` module contains an additional metric-audit example. Neither API provides the browser mutation interpreter or supports clinical patient care.
 
-Execute high-throughput batch simulation benchmarks:
+## Security and privacy
+
+- Use **synthetic/non-identifiable data only**. The regex-based PHI filter is incomplete and is **not** a HIPAA de-identification or compliance guarantee.
+- The HMAC-SHA256 chain is an **in-memory, session-scoped demonstration**. It is not a persistent clinical audit log. Set `AUDIT_SECRET_KEY` for a stable session configuration; never commit its value.
+- The mock language-model adapter never calls an actual LLM provider and does not validate clinical decisions.
+- Docker Compose requires `AUDIT_SECRET_KEY` supplied via environment and binds the published port to `127.0.0.1` by default. **There is no authentication.** Do not expose the API publicly or process real patient information.
+- The browser interface has no server-side patient storage or analytics built into this repository.
+
+## Development, tests, and deployment
 
 ```bash
-python simulator.py 1000
+python -m pip install ".[test]"
+python -m pytest -q
+python -m compileall -q hiv_resistance_agent.py hiv_art_resistance_agent agents
 ```
 
----
+GitHub Actions runs the test suite on Python 3.10, 3.11, and 3.12. A separate Pages workflow packages `web/index.html` and `hiv_resistance_agent.py` for static deployment when GitHub Pages is enabled. A Python server cannot run directly on GitHub Pages; the browser application uses Pyodide instead.
 
-## 🐳 Container Deployment
+Docker (local-only default with an externally supplied key):
 
 ```bash
-docker build -t hiv-art-resistance-agent .
-docker run -p 8000:8000 hiv-art-resistance-agent
+export AUDIT_SECRET_KEY="replace-with-a-long-random-secret"
+docker compose up --build
 ```
 
----
+## Technology and compatibility
 
-## 📁 Project Structure
+Python, standard-library mutation-rule engine, optional FastAPI/Pydantic server, Pyodide for browser execution, and static HTML/CSS/JavaScript. The browser UI is designed for current Chromium, Firefox, and Safari versions with WebAssembly enabled; runtime loading has not yet been verified across every browser.
 
-```
-hiv-art-resistance-agent/
-├── agents/                          # Enterprise agent system
-│   ├── base.py                      # PHI Guard, Audit Trail, Security
-│   ├── models.py                    # Pydantic data models
-│   ├── workers.py                   # QC, Safety, Protocol workers
-│   ├── supervisor.py                # Multi-agent orchestrator
-│   ├── llm_factory.py               # LLM provider factory
-│   ├── api.py                       # FastAPI REST endpoints
-│   ├── streamer.py                  # WebSocket telemetry
-│   ├── learning.py                  # Bayesian calibration
-│   └── metrics.py                   # Prometheus metrics
-├── hiv_art_resistance_agent/        # Core application package
-│   ├── cli.py                       # Full-featured CLI
-│   ├── server.py                    # FastAPI app factory
-│   ├── agents.py                    # Agent hierarchy
-│   ├── engine.py                    # Clinical domain engine
-│   └── models.py                    # Clinical data models
-├── tests/                           # Test suite
-│   ├── test_hiv_art_resistance_agent.py
-│   └── test_enrichment.py
-├── hiv_resistance_agent.py          # HIVdb resistance interpreter
-├── enrichment.py                    # Enrichment feature engines
-├── simulator.py                     # High-throughput simulator
-├── cli.py                           # CLI entry point
-├── pyproject.toml                   # Project configuration
-├── Dockerfile                       # Container definition
-└── README.md                        # This file
-```
+For current, validated interpretation and treatment guidance, consult the [Stanford HIV Drug Resistance Database](https://hivdb.stanford.edu/) and [NIH HIV treatment guidelines](https://clinicalinfo.hiv.gov/en/guidelines).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

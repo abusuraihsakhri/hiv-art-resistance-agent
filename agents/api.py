@@ -12,7 +12,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Hiv Art Resistance Agent API",
-    description="Enterprise Distributed Component Platform (Antimicrobial Stewardship & Microbiology)",
+    description="Demonstration metric-audit API, not a clinical HIV drug-resistance interpretation service.",
     version="3.0.0-ENTERPRISE",
 )
 
@@ -23,7 +23,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "hiv-art-resistance-agent", "domain": "Antimicrobial Stewardship & Microbiology", "standard": "CLSI M100 / EUCAST / CDC NHSN Guidelines", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "hiv-art-resistance-agent", "domain": "Antimicrobial Stewardship & Microbiology", "standard": "illustrative synthetic thresholds (not clinical guidelines)", "version": "3.0.0-ENTERPRISE"}
 
 
 @app.get("/metrics")
@@ -31,7 +31,7 @@ def metrics():
     return {
         "dossiers_processed_total": len(supervisor.dossier_registry),
         "audit_blocks_total": len(AuditLogger.get_trail()),
-        "system_status": "NOMINAL_OPTIMAL"
+        "system_status": "RUNNING"
     }
 
 

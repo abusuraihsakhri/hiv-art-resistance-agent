@@ -4,11 +4,31 @@ Command-Line Interface for HIV-Resistance Sentinel: Genotypic Mutation Interpret
 import argparse
 import csv
 import json
+import math
 import sys
 from .models import ClinicalCasePayload
 from .agents import HIVResistanceCoordinator
 
 coordinator = HIVResistanceCoordinator()
+
+
+def parse_csv_boolean(value):
+    """Interpret CSV booleans explicitly instead of treating nonempty strings as true."""
+    if isinstance(value, bool):
+        return value
+    normalized = str(value or "").strip().lower()
+    if normalized in {"1", "true", "yes", "y"}:
+        return True
+    if normalized in {"", "0", "false", "no", "n"}:
+        return False
+    raise ValueError(f"Invalid boolean: {value!r}; expected true/false, yes/no, or 1/0")
+
+
+def parse_finite_metric(value):
+    metric = float(value)
+    if not math.isfinite(metric):
+        raise ValueError("Metrics must be finite numbers")
+    return metric
 
 
 def main(argv=None):
@@ -55,7 +75,7 @@ def main(argv=None):
         dossier = coordinator.process_case(case)
         print("=" * 80)
         print(f"  HIV-RESISTANCE SENTINEL: GENOTYPIC MUTATION INTERPRETATION & ART OPTIMIZATION AGENT")
-        print(f"  Domain: Infectious Diseases | Standard: IDSA / SHEA 2024 Antimicrobial Stewardship")
+        print("  Illustrative threshold test only; not a clinical guideline or HIVdb analysis.")
         print(f"  Case: {dossier['case_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
@@ -83,7 +103,7 @@ def main(argv=None):
             return 0 if verified else 1
         except ImportError:
             print("Audit system not available. No audit trail to verify.")
-            return 0
+            return 1
 
     if args.command == "batch":
         with open(args.input, mode="r", encoding="utf-8-sig") as f:
@@ -91,16 +111,16 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "stat_critical_alerts", "consensus_summary"]
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "stat_critical_alerts", "consensus_summary"]))
         out_rows = []
         for r in rows:
             case = ClinicalCasePayload(
                 case_id=r.get("case_id", "CASE-01"),
                 patient_synthetic_id=r.get("patient_synthetic_id", "SYNTH-01"),
-                primary_metric=float(r.get("metric_primary", r.get("primary_metric", 15.0))),
-                secondary_metric=float(r.get("metric_secondary", r.get("secondary_metric", 5.0))),
+                primary_metric=parse_finite_metric(r.get("metric_primary") or r.get("primary_metric") or 15.0),
+                secondary_metric=parse_finite_metric(r.get("metric_secondary") or r.get("secondary_metric") or 5.0),
                 status_flag=r.get("status_flag", r.get("status_text", "NORMAL")),
-                is_stat=bool(r.get("is_stat", r.get("critical_flag", False))),
+                is_stat=parse_csv_boolean(r.get("is_stat") if r.get("is_stat") not in (None, "") else r.get("critical_flag", False)),
             )
             dossier = coordinator.process_case(case)
             row_dict = dict(r)
@@ -122,9 +142,11 @@ def main(argv=None):
             import uvicorn
             from .server import create_app
             app = create_app()
-            if app:
-                print(f"Starting HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Agent on http://{args.host}:{args.port}")
-                uvicorn.run(app, host=args.host, port=args.port)
+            if app is None:
+                print("FastAPI / pydantic not installed. Install the api extra.")
+                return 1
+            print(f"Starting demonstration metric API on http://{args.host}:{args.port}")
+            uvicorn.run(app, host=args.host, port=args.port)
         except ImportError:
             print("FastAPI / uvicorn not installed. Run 'pip install fastapi uvicorn'")
             return 1
