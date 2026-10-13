@@ -171,7 +171,7 @@ NRTI_MUTATIONS = {
         },
         "description": "Multi-NRTI resistance mutation. Part of Q151M complex.",
     },
-    "T69ins": {
+    "T69INS": {
         "drugs_affected": {
             "zidovudine": {"score": 40, "level": "HIGH_LEVEL_RESISTANCE"},
             "stavudine": {"score": 40, "level": "HIGH_LEVEL_RESISTANCE"},
@@ -402,6 +402,9 @@ def interpret_drug_resistance(mutations: List[str]) -> Dict[str, Dict[str, Any]]
     Returns:
         Dict mapping each drug to its resistance score and level
     """
+    # Deduplicate before summing scores; a mutation cannot contribute twice.
+    mutations = list(dict.fromkeys(str(m).strip().upper() for m in mutations if str(m).strip()))
+
     # Initialize scores for all drugs at 0
     drug_scores: Dict[str, int] = {drug: 0 for drug in HIV_DRUGS}
 
@@ -409,6 +412,7 @@ def interpret_drug_resistance(mutations: List[str]) -> Dict[str, Dict[str, Any]]
     all_mutation_dbs = [NRTI_MUTATIONS, NNRTI_MUTATIONS, PI_MUTATIONS, INSTI_MUTATIONS]
 
     detected_mutation_details = []
+    unrecognized_mutations = []
 
     for mutation in mutations:
         mutation_upper = mutation.strip().upper()
@@ -428,6 +432,8 @@ def interpret_drug_resistance(mutations: List[str]) -> Dict[str, Dict[str, Any]]
                         drug_scores[drug_key] += impact["score"]
                 found = True
                 break
+        if not found:
+            unrecognized_mutations.append(mutation_upper)
 
     # Apply compensatory mutation bonuses
     for mutation in mutations:
@@ -462,18 +468,21 @@ def interpret_drug_resistance(mutations: List[str]) -> Dict[str, Dict[str, Any]]
     results = {}
     for drug_key, score in drug_scores.items():
         drug_info = HIV_DRUGS.get(drug_key, {})
+        not_evaluated = drug_info.get("class") not in {"NRTI", "NNRTI", "PI", "INSTI"}
         results[drug_key] = {
             "drug_class": drug_info.get("class", "UNKNOWN"),
             "abbreviation": drug_info.get("abbreviation", drug_key[:3].upper()),
             "score": score,
-            "level": score_to_level(score),
-            "is_susceptible": score <= 0,
+            "level": "NOT_EVALUATED" if not_evaluated else score_to_level(score),
+            "is_susceptible": not not_evaluated and score <= 0,
         }
 
     return {
         "drug_scores": results,
         "detected_mutations": detected_mutation_details,
         "total_mutations_detected": len(detected_mutation_details),
+        "unrecognized_mutations": unrecognized_mutations,
+        "limitations": "Educational, incomplete mutation table; not Stanford HIVdb or a validated clinical interpretation. A zero score does not establish susceptibility.",
     }
 
 
@@ -497,6 +506,15 @@ def recommend_regimen(
         Dict with recommended regimen and alternatives
     """
     scores = resistance_interpretation["drug_scores"]
+    unknown = resistance_interpretation.get("unrecognized_mutations", [])
+    if unknown:
+        return {
+            "recommendations": [{"regimen": ["EXPERT_REVIEW_REQUIRED"], "type": "EXPERT_CONSULTATION",
+                "description": "Unrecognized mutation(s) require interpretation by a validated resistance service."}],
+            "susceptible_drugs": {"NRTIs": [], "NNRTIs": [], "PIs": [], "INSTIs": [], "others": []},
+            "notes": ["Unrecognized mutations: " + ", ".join(unknown)],
+            "tropism": tropism,
+        }
 
     # Categorize drugs by susceptibility
     susceptible_nrtis = []
@@ -595,6 +613,15 @@ def recommend_regimen(
             "description": f"NNRTI-based regimen: {nnrti} + {'+'.join(nrti_backbone)}",
         })
 
+    if hepatitis_b_coinfected:
+        # A 3TC/FTC-only backbone must never be presented as HBV coverage.
+        tenofovir = {"tenofovir_disoproxil", "tenofovir_alafenamide"}
+        companion = {"lamivudine", "emtricitabine"}
+        recommendations = [item for item in recommendations
+                           if tenofovir.intersection(item["regimen"]) and companion.intersection(item["regimen"])]
+        if not recommendations:
+            regimen_notes.append("HIV/HBV coinfection: no candidate with both tenofovir and 3TC/FTC could be constructed; specialist review required.")
+
     # If very limited options
     if not recommendations:
         recommendations.append({
@@ -678,6 +705,7 @@ def interpret_tropism(tropism_result: str) -> Dict[str, Any]:
         "clinical_significance": "Unable to interpret. Repeat testing recommended.",
     })
 
+    result = dict(result)
     result["raw_input"] = tropism_result
     return result
 
@@ -704,7 +732,7 @@ def analyze_hiv_resistance(
     # Interpret resistance
     resistance = interpret_drug_resistance(mutations)
 
-    # Get regimen recommendations
+    # Get illustrative candidate regimens (not prescriptions or guideline recommendations)
     regimen = recommend_regimen(
         resistance, tropism, hla_b5701_positive, hepatitis_b_coinfected
     )
@@ -749,6 +777,7 @@ def analyze_hiv_resistance(
         "regimen_recommendations": regimen,
         "tropism_interpretation": tropism_result,
         "alerts": alerts,
+        "limitations": "For education/research only. This local rules table is incomplete, is not Stanford HIVdb, and must not guide individual ART decisions.",
     }
 
 

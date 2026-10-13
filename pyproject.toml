@@ -19,9 +19,17 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = []
 
+[project.optional-dependencies]
+api = ["fastapi>=0.100", "uvicorn>=0.23", "pydantic>=2"]
+test = ["pytest>=7", "fastapi>=0.100", "httpx>=0.24", "pydantic>=2"]
+
 [project.scripts]
 hiv-art-resistance-engine = "hiv_art_resistance_agent.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/abusuraihsakhri/hiv-art-resistance-engine"
-Repository = "https://github.com/abusuraihsakhri/hiv-art-resistance-engine.git"
+Homepage = "https://github.com/abusuraihsakhri/hiv-art-resistance-agent"
+Repository = "https://github.com/abusuraihsakhri/hiv-art-resistance-agent"
+
+[tool.setuptools]
+packages = ["agents", "hiv_art_resistance_agent"]
+py-modules = ["hiv_resistance_agent", "enrichment"]

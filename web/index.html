@@ -1,236 +1,159 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hiv Art Resistance Engine — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>HIV ART Resistance — Educational Mutation Explorer</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#e8edf8;background:#0b1220}
+    *{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:1050px;margin:auto}
+    h1{font-size:clamp(1.45rem,3vw,2.1rem);margin:0 0 8px}h2{font-size:1.1rem;margin:0 0 16px}
+    p{line-height:1.5}header{padding:12px 0 20px;border-bottom:1px solid #354058;margin-bottom:22px}
+    .muted{color:#b4c3d9}.notice{padding:14px 16px;background:#322518;border:1px solid #a77c48;border-radius:9px;color:#ffe2b8;margin:12px 0}
+    .layout{display:grid;grid-template-columns:minmax(270px,0.85fr) minmax(0,1.15fr);gap:20px}
+    section{background:#172339;border:1px solid #354058;border-radius:12px;padding:20px;min-width:0}
+    label{font-weight:600;font-size:.92rem;display:block;margin-bottom:7px}
+    textarea,select{width:100%;color:#fff;background:#0e192a;border:1px solid #596982;border-radius:8px;padding:12px;font:inherit}
+    textarea{min-height:116px;resize:vertical}select{margin-bottom:14px}
+    input[type=checkbox]{width:18px;height:18px;accent-color:#80b8ff} .check{display:flex;gap:9px;align-items:center;margin:12px 0;font-weight:400}
+    button{border:0;border-radius:8px;background:#77b1fb;color:#07152a;font-weight:700;font:inherit;padding:11px 17px;cursor:pointer}
+    button:disabled{opacity:.5;cursor:wait}button.secondary{background:#344967;color:#fff;margin-left:8px}
+    button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #f8d78a;outline-offset:2px}
+    .actions{margin-top:17px}.small{font-size:.83rem}.status{margin:14px 0;min-height:26px;color:#d7e5f7}
+    .scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.89rem}th,td{padding:9px 7px;text-align:left;border-bottom:1px solid #34435d}
+    th{color:#d1e3fc}.kpis{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 14px}
+    .kpi{padding:9px 12px;border:1px solid #445671;border-radius:7px;background:#112039}
+    .kpi strong{display:block;font-size:1.15rem}ul{padding-left:20px}li{margin:6px 0;overflow-wrap:anywhere}
+    #output[hidden]{display:none}footer{margin-top:22px;font-size:.86rem;color:#b4c3d9}
+    a{color:#a5d1ff}@media(max-width:760px){body{padding:12px}.layout{grid-template-columns:1fr}section{padding:16px}}
+  </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Hiv Art Resistance Engine</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+<main>
+  <header>
+    <h1>HIV ART resistance mutation explorer</h1>
+    <p class="muted">A transparent demonstration of the repository's local, simplified Python scoring rules.</p>
+    <div class="notice"><strong>Research / education only.</strong> This is not Stanford HIVdb, a clinically validated resistance algorithm, or an ART prescribing tool. Incomplete mutation coverage and interactions can make outputs inaccurate. Never enter patient-identifiable data.</div>
+  </header>
+  <div class="layout">
+    <section aria-labelledby="input-title">
+      <h2 id="input-title">Analysis inputs</h2>
+      <form id="analysis-form">
+        <label for="mutations">Mutation codes (comma-, space-, or newline-separated)</label>
+        <textarea id="mutations" spellcheck="false" autocomplete="off" placeholder="M184V, K103N, N155H" maxlength="2000">M184V, K103N</textarea>
+        <p class="muted small">Synthetic mutation examples only; unsupported codes are reported as unrecognized.</p>
+        <label for="tropism">Reported tropism (optional)</label>
+        <select id="tropism">
+          <option value="">Not provided</option><option value="CCR5">CCR5</option>
+          <option value="CXCR4">CXCR4</option><option value="DUAL_MIXED">Dual/mixed</option>
+          <option value="NON_R5">Non-R5</option>
+        </select>
+        <label class="check"><input id="hla" type="checkbox"> HLA-B*5701 positive (illustrative contraindication flag)</label>
+        <label class="check"><input id="hbv" type="checkbox"> HIV/HBV coinfection (illustrative regimen filter)</label>
+        <div class="actions">
+          <button type="submit" id="run">Analyze example</button>
+          <button type="button" class="secondary" id="export" disabled>Export JSON</button>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Hiv Art Resistance Engine Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "hiv-art-resistance-engine",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+      </form>
+      <p id="status" class="status" role="status" aria-live="polite">Python runtime loads when you select Analyze.</p>
+    </section>
+    <section aria-labelledby="results-title">
+      <h2 id="results-title">Exploratory output</h2>
+      <p id="placeholder" class="muted">Enter mutations to generate an educational scoring summary.</p>
+      <div id="output" hidden>
+        <div class="kpis"><div class="kpi"><strong id="count">0</strong>Recognized mutations</div>
+          <div class="kpi"><strong id="affected">0</strong>Drugs with nonzero table scores</div></div>
+        <p id="unknown" class="notice" hidden></p>
+        <h2>Nonzero local scores</h2>
+        <div class="scroll"><table><thead><tr><th>Drug</th><th>Class</th><th>Score</th><th>Local category</th></tr></thead><tbody id="scores"></tbody></table></div>
+        <p id="no-scores" class="muted small" hidden>No nonzero local scores. This does not establish susceptibility.</p>
+        <h2 style="margin-top:22px">Illustrative candidate combinations</h2>
+        <ul id="regimens"></ul>
+        <p class="muted small">These are not treatment recommendations. Regimen design requires a complete resistance history, virologic context, comorbidities, drug interactions and validated interpretation.</p>
+      </div>
+    </section>
+  </div>
+  <footer>All entered values and results remain in this browser tab. The Python runtime is downloaded from a third-party CDN; no mutation inputs are sent to that CDN or to a server. Source and rules: <a href="https://github.com/abusuraihsakhri/hiv-art-resistance-agent">GitHub repository</a>.</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let runtimePromise, lastResult = null;
+const setStatus = message => { $("status").textContent = message; };
+async function initializePython() {
+  if (typeof loadPyodide !== "function") throw new Error("Python runtime could not load. Check network access or content-blocking settings.");
+  const py = await loadPyodide({indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/"});
+  const source = await fetch("./hiv_resistance_agent.py");
+  if (!source.ok) throw new Error("Python rules file unavailable (" + source.status + ").");
+  py.FS.writeFile("hiv_resistance_agent.py", await source.text());
+  await py.runPythonAsync("import hiv_resistance_agent");
+  return py;
+}
+function cell(row, value) {
+  const td = document.createElement("td");
+  td.textContent = String(value);
+  row.appendChild(td);
+}
+function render(result) {
+  lastResult = result;
+  const profile = result.resistance_interpretation;
+  const nonzero = Object.entries(profile.drug_scores).filter(([, v]) => v.score > 0);
+  $("count").textContent = String(profile.total_mutations_detected);
+  $("affected").textContent = String(nonzero.length);
+  $("scores").replaceChildren();
+  for (const [drug, info] of nonzero) {
+    const tr = document.createElement("tr");
+    [drug.replaceAll("_", " "), info.drug_class, info.score, info.level.replaceAll("_", " ")].forEach(v => cell(tr, v));
+    $("scores").appendChild(tr);
+  }
+  $("no-scores").hidden = nonzero.length > 0;
+  const unknown = profile.unrecognized_mutations || [];
+  $("unknown").hidden = !unknown.length;
+  $("unknown").textContent = unknown.length ? "Not recognized by the incomplete local table: " + unknown.join(", ") + ". Other output must not be interpreted as susceptibility." : "";
+  $("regimens").replaceChildren();
+  for (const item of result.regimen_recommendations.recommendations) {
+    const li = document.createElement("li");
+    li.textContent = item.type + ": " + item.description;
+    $("regimens").appendChild(li);
+  }
+  $("output").hidden = false;
+  $("placeholder").hidden = true;
+  $("export").disabled = false;
+}
+$("analysis-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const mutations = $("mutations").value.split(/[\s,;]+/).map(m => m.trim().toUpperCase()).filter(Boolean);
+  if (mutations.length > 100 || mutations.some(m => !/^[A-Z]\d+[A-Z]+$/.test(m))) {
+    setStatus("Use up to 100 mutation codes such as M184V or K103N. Do not enter patient information.");
+    return;
+  }
+  $("run").disabled = true;
+  $("export").disabled = true;
+  setStatus("Loading Python runtime and calculating local rule scores…");
+  try {
+    runtimePromise ||= initializePython().catch(error => { runtimePromise = null; throw error; });
+    const py = await runtimePromise;
+    const payload = {mutations, tropism: $("tropism").value || null, hla: $("hla").checked, hbv: $("hbv").checked};
+    py.globals.set("payload_json", JSON.stringify(payload));
+    const output = await py.runPythonAsync(
+      "import json\nfrom hiv_resistance_agent import analyze_hiv_resistance\np = json.loads(payload_json)\njson.dumps(analyze_hiv_resistance(p['mutations'], p['tropism'], p['hla'], p['hbv']))"
+    );
+    render(JSON.parse(output));
+    setStatus("Local example analysis complete.");
+  } catch (error) {
+    setStatus("Analysis unavailable: " + (error && error.message ? error.message : String(error)));
+  } finally {
+    $("run").disabled = false;
+  }
+});
+$("export").addEventListener("click", () => {
+  if (!lastResult) return;
+  const url = URL.createObjectURL(new Blob([JSON.stringify(lastResult, null, 2)], {type:"application/json"}));
+  const a = document.createElement("a"); a.href = url; a.download = "hiv-resistance-example.json"; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+</script>
 </body>
 </html>

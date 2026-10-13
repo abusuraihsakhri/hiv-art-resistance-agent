@@ -1,0 +1,43 @@
+name: Deploy educational browser app
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate interpreter and tests
+        run: |
+          python -m pip install ".[test]"
+          python -m pytest -q
+          python -m compileall -q hiv_resistance_agent.py hiv_art_resistance_agent agents
+      - name: Prepare Pages artifact
+        run: |
+          cp hiv_resistance_agent.py web/hiv_resistance_agent.py
+          touch web/.nojekyll
+          test -s web/index.html && test -s web/hiv_resistance_agent.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4
