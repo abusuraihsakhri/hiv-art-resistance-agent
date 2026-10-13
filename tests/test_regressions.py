@@ -1,8 +1,11 @@
 """Regression coverage for input safety and documented local-model limits."""
+import csv
+from pathlib import Path
+
 import pytest
 
 from hiv_resistance_agent import interpret_drug_resistance, recommend_regimen, analyze_hiv_resistance
-from hiv_art_resistance_agent.cli import parse_csv_boolean, parse_finite_metric
+from hiv_art_resistance_agent.cli import parse_csv_boolean, parse_finite_metric, main as metrics_main
 from agents.base import AuditTrail
 
 
@@ -64,9 +67,28 @@ def test_audit_trail_returns_defensive_copy():
 
 
 def test_static_web_console_has_no_fabricated_audit_results():
-    from pathlib import Path
     html = (Path(__file__).resolve().parents[1] / "web" / "index.html").read_text()
-    assert 'loadPyodide' in html
-    assert 'DOSSIER-SIM-' not in html
-    assert 'HMAC_SHA256_e83' not in html
+    assert "loadPyodide" in html
+    assert "DOSSIER-SIM-" not in html
+    assert "HMAC_SHA256_e83" not in html
     assert "/api/audit" not in html
+
+
+def test_codons_69_insertion_is_recognized_regardless_of_case():
+    profile = interpret_drug_resistance(["T69ins"])
+    assert profile["total_mutations_detected"] == 1
+    assert profile["unrecognized_mutations"] == []
+
+
+def test_batch_csv_false_flag_is_not_interpreted_as_true(tmp_path):
+    source = tmp_path / "input.csv"
+    output = tmp_path / "output.csv"
+    source.write_text(
+        "case_id,patient_synthetic_id,metric_primary,metric_secondary,is_stat,status_flag\n"
+        "TEST-1,SYNTH-1,1.0,1.0,False,NORMAL\n"
+    )
+    assert metrics_main(["batch", "-i", str(source), "-o", str(output)]) == 0
+    with output.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 1
+    assert rows[0]["stat_critical_alerts"] == "0"

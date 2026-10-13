@@ -75,7 +75,7 @@ def main(argv=None):
         dossier = coordinator.process_case(case)
         print("=" * 80)
         print(f"  HIV-RESISTANCE SENTINEL: GENOTYPIC MUTATION INTERPRETATION & ART OPTIMIZATION AGENT")
-        print(f"  Domain: Infectious Diseases | Standard: IDSA / SHEA 2024 Antimicrobial Stewardship")
+        print("  Illustrative threshold test only; not a clinical guideline or HIVdb analysis.")
         print(f"  Case: {dossier['case_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
@@ -103,7 +103,7 @@ def main(argv=None):
             return 0 if verified else 1
         except ImportError:
             print("Audit system not available. No audit trail to verify.")
-            return 0
+            return 1
 
     if args.command == "batch":
         with open(args.input, mode="r", encoding="utf-8-sig") as f:
@@ -142,9 +142,11 @@ def main(argv=None):
             import uvicorn
             from .server import create_app
             app = create_app()
-            if app:
-                print(f"Starting HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Agent on http://{args.host}:{args.port}")
-                uvicorn.run(app, host=args.host, port=args.port)
+            if app is None:
+                print("FastAPI / pydantic not installed. Install the api extra.")
+                return 1
+            print(f"Starting demonstration metric API on http://{args.host}:{args.port}")
+            uvicorn.run(app, host=args.host, port=args.port)
         except ImportError:
             print("FastAPI / uvicorn not installed. Run 'pip install fastapi uvicorn'")
             return 1

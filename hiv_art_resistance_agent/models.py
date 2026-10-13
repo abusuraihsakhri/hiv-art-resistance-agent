@@ -1,7 +1,7 @@
 """
 Clinical Data Models & Enums for HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Agent.
 Domain: Infectious Diseases
-Standard: IDSA / SHEA 2024 Antimicrobial Stewardship
+Standard: illustrative demo rules (not clinical guidelines)
 """
 import datetime
 from dataclasses import dataclass, field
@@ -43,7 +43,7 @@ class AgentAlert:
     title: str
     clinical_finding: str
     actionable_recommendation: str
-    guideline_citation: str = "IDSA / SHEA 2024 Antimicrobial Stewardship"
+    guideline_citation: str = "illustrative demo rules (not clinical guidelines)"
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     def to_dict(self) -> Dict[str, Any]:

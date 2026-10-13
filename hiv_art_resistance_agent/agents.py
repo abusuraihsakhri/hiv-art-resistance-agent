@@ -60,7 +60,7 @@ class RegimenBuilderAgent:
 
 
 class HIVResistanceCoordinator:
-    """Executive Coordinator & Air-Gapped Supervisory Interface."""
+    """Coordinator for demonstration thresholds; not an HIVdb implementation."""
     def __init__(self):
         self.agent_1 = MutationExtractorAgent()
         self.agent_2 = StanfordRulesScorerAgent()
@@ -93,7 +93,7 @@ class HIVResistanceCoordinator:
             "stat_critical_alerts": stat_count,
             "warning_alerts": warn_count,
             "alerts": [a.to_dict() for a in all_alerts],
-            "guideline_standard": "IDSA / SHEA 2024 Antimicrobial Stewardship",
+            "guideline_standard": "illustrative demo rules (not clinical guidelines)",
             "consensus_summary": f"Multi-agent supervision completed across 3 sub-agents with status [{status.value}].",
         }
 
@@ -105,6 +105,6 @@ class HIVResistanceCoordinator:
         if "status" in q or "summary" in q:
             return f"HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Agent currently tracking {len(self.case_registry)} cases in on-premises memory."
         elif "guideline" in q or "standard" in q:
-            return "Active clinical surveillance operates under IDSA / SHEA 2024 Antimicrobial Stewardship validated protocols."
+            return "This subsystem runs illustrative numeric thresholds, not validated HIV resistance guidelines."
         else:
-            return f"HIV-Resistance Sentinel: Genotypic Mutation Interpretation & ART Optimization Agent executive agent online. Zero-PHI air-gapped monitoring active."
+            return "Illustrative metric audit subsystem active. Do not submit patient-identifiable information."
